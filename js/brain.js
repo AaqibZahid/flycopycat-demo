@@ -115,6 +115,12 @@ window.FlyBrain = (function () {
 
     // 4. motor readout from descending neurons
     var steer = 0, forward = 0, escape = 0;
+    var regS = 0, regR = 0, regM = 0; // region spike counts for observability
+    for (var f2 = 0; f2 < fired.length; f2++) {
+      if (isSensory[fired[f2]]) regS++;
+      else if (isMotor[fired[f2]]) regM++;
+      else regR++;
+    }
     for (var m = 0; m < motorIdx.length; m++) {
       var mi = motorIdx[m];
       if (fired.indexOf(mi) === -1) continue;
@@ -132,7 +138,8 @@ window.FlyBrain = (function () {
     while (spikeLog.length && spikeLog[0] < tick - 60) spikeLog.shift();
 
     return { steer: steer, forward: forward, escape: escape,
-             spikes: fired.length, gfRecentlyFired: (tick - gfFiredTick) < 12 };
+             spikes: fired.length, gfRecentlyFired: (tick - gfFiredTick) < 12,
+             regions: { sensory: regS, relay: regR, motor: regM } };
   }
 
   function stats() {

@@ -35,8 +35,13 @@ window.Copycat = (function () {
   var resultsShown = false;
   var lockN = 0, lockHit = 0;   // pursuit-lock samples
   var flyStartT = 0, flyEndT = 0;
+  var roundStartT = 0;            // round clock: first pen touch -> results
   var lastOut = null;             // last brain readout (drives commentary)
   var lastSayT = 0, saidHello = false, saidLost = false;
+  var emaS = 0, emaR = 0, emaM = 0;   // smoothed region firing for bars
+  var gfCount = 0, gfWas = false;     // Giant Fiber fire counter
+  var peakSpikes = 0, peakActive = 0; // round peaks (brain idles at rest)
+  var events = [];                    // {t, text} brain diary
 
   function $(id) { return document.getElementById(id); }
 
@@ -97,7 +102,7 @@ window.Copycat = (function () {
       var p = canvasPos(e, human);
       var now = performance.now();
       if (erasing) { eraseAt(p); return; }
-      if (!drawing) { drawing = true; drawStartT = now; }
+      if (!drawing) { drawing = true; drawStartT = now; roundStartT = now; }
       cur = { pts: [], color: penColor, width: penWidth };
       strokes.push(cur);
       pushPoint(p, now);
@@ -193,9 +198,10 @@ window.Copycat = (function () {
 
         // motor readout -> movement (geometric assist, documented in README)
         // base speed scales with drive: no stimulus smell, no motion
+        // gains from tools/calibrate.js sweep (base 0.8 / loom 1.8 / steer 0.16)
         var close = dist < 40;
-        flyState.heading += out.steer * (close ? 0.05 : 0.12); // gentle near target
-        var want = 0.6 + loom * 2.2 + out.forward * 0.9;
+        flyState.heading += out.steer * (close ? 0.07 : 0.16); // gentle near target
+        var want = 0.8 + loom * 1.8 + out.forward * 0.9;
         if (out.escape > 0) want += 3.0; // Giant Fiber burst
         if (dist < 20) want *= 0.2;      // arrived: settle
         if (dist < 30) flyState.dwellN++; else flyState.dwellN = 0;
@@ -207,11 +213,16 @@ window.Copycat = (function () {
         flyState.trail.push({ x: flyState.x, y: flyState.y });
         if (flyState.trail.length > 4000) flyState.trail.shift();
         lastOut = out;
+        if (brainTick % 15 === 0) updateBrainPanel(out, loom, rel);
         commentate(out, dist);
       }
     }
     flyState.wing += 0.6;
     drawFlyScene();
+    // round clock ticks while a round is live
+    if (drawing && !resultsShown && roundStartT) {
+      $('roundTimer').textContent = ((performance.now() - roundStartT) / 1000).toFixed(1) + 's';
+    }
     checkFinished();
     requestAnimationFrame(loop);
   }
@@ -257,6 +268,44 @@ window.Copycat = (function () {
     c.restore();
   }
 
+  function logEvent(text) {
+    var t = roundStartT ? ((performance.now() - roundStartT) / 1000).toFixed(1) + 's' : '—';
+    events.push({ t: t, text: text });
+    if (events.length > 30) events.shift();
+    $('eventLog').innerHTML = events.map(function (e) {
+      return '<li><b>' + e.t + '</b> ' + e.text + '</li>';
+    }).join('');
+    var log = $('eventLog');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // Brain panel refresh at ~4Hz from the live readout
+  function updateBrainPanel(out, loom, rel) {
+    var st = window.FlyBrain.stats();
+    if (st.spikesPerSec > peakSpikes) peakSpikes = st.spikesPerSec;
+    if (st.active > peakActive) peakActive = st.active;
+    emaS += ((out.regions ? out.regions.sensory : 0) - emaS) * 0.3;
+    emaR += ((out.regions ? out.regions.relay : 0) - emaR) * 0.3;
+    emaM += ((out.regions ? out.regions.motor : 0) - emaM) * 0.3;
+    $('barSensory').style.width = Math.min(100, emaS * 4) + '%';
+    $('barRelay').style.width = Math.min(100, emaR * 8) + '%';
+    $('barMotor').style.width = Math.min(100, emaM * 25) + '%';
+    $('gLoom').textContent = Math.round(loom * 100) + '%';
+    $('gBearing').textContent = rel < -0.1 ? 'left' : (rel > 0.1 ? 'right' : 'ahead');
+    var gfNow = out.escape > 0;
+    if (gfNow && !gfWas) {
+      gfCount++;
+      $('gGF').textContent = gfCount;
+      $('gfBadge').textContent = 'GF FIRED!';
+      $('gfBadge').classList.add('gf-hot');
+      logEvent('Giant Fiber fired (escape burst)');
+      setTimeout(function () {
+        $('gfBadge').textContent = 'GF quiet';
+        $('gfBadge').classList.remove('gf-hot');
+      }, 1200);
+    }
+    gfWas = gfNow;
+  }
   // Speech bubble driven by actual brain readout (transitions only, no spam)
   function say(text, mood) {
     var now = performance.now();
@@ -272,10 +321,10 @@ window.Copycat = (function () {
 
   function commentate(out, dist) {
     if (resultsShown) return;
-    if (!saidHello) { saidHello = true; say('Smells food! Following your pen…', 'sniffing'); return; }
+    if (!saidHello) { saidHello = true; say('Smells food! Following your pen…', 'sniffing'); logEvent('Round started — pursuit engaged'); return; }
     if (out.escape > 0) { say('WOAH! My Giant Fiber just fired!', 'startled'); return; }
-    if (dist > 200 && !saidLost) { saidLost = true; say('Lost the scent… where did it go?', 'confused'); return; }
-    if (dist < 12 && saidLost) { saidLost = false; say('Found it! Tasty trail…', 'munching'); }
+    if (dist > 200 && !saidLost) { saidLost = true; say('Lost the scent… where did it go?', 'confused'); logEvent('Pursuit lock lost (target > 200px)'); return; }
+    if (dist < 12 && saidLost) { saidLost = false; say('Found it! Tasty trail…', 'munching'); logEvent('Lock regained'); }
   }
   function checkFinished() {
     if (resultsShown || !drawing) return;
@@ -289,6 +338,7 @@ window.Copycat = (function () {
     if (settled || timedOut) {
       resultsShown = true;
       flyEndT = now;
+      logEvent(timedOut ? 'Fly timed out — showing partial copy' : 'Fly settled on target');
       showResults();
     }
   }
@@ -330,16 +380,39 @@ window.Copycat = (function () {
     $('mFidelity').textContent = fidelity + '%';
     $('mHumanTime').textContent = ((drawEndT - drawStartT) / 1000).toFixed(1) + 's';
     $('mFlyTime').textContent = ((flyEndT - (flyStartT || drawStartT)) / 1000).toFixed(1) + 's';
-    $('mSpikes').textContent = stats.spikesPerSec;
-    $('mActive').textContent = stats.active + '/' + stats.neurons;
+    $('mSpikes').textContent = peakSpikes;
+    $('mActive').textContent = peakActive + '/' + stats.neurons;
     $('mLock').textContent = lockN ? Math.round(100 * lockHit / lockN) + '%' : '—';
     $('flyMood').textContent = 'done!';
     lastSayT = 0; // let the finale line through
     say('Done! ' + fidelity + '% — not bad for 332 neurons!', 'proud');
-    var again = $('btnAgain');
-    again.classList.remove('hidden');
-    again.onclick = function () { reset(); };
+    openModal(fidelity, stats);
     if (window.CopycatOnResults) window.CopycatOnResults({ fidelity: fidelity });
+  }
+
+  function openModal(fidelity, stats) {
+    $('modalFidelity').textContent = fidelity + '%';
+    var humanS = ((drawEndT - drawStartT) / 1000).toFixed(1) + 's';
+    var flyS = ((flyEndT - (flyStartT || drawStartT)) / 1000).toFixed(1) + 's';
+    var roundS = ((flyEndT - roundStartT) / 1000).toFixed(1) + 's';
+    $('roundTimer').textContent = roundS;
+    var rows = [
+      ['Your time', humanS],
+      ['Fly time', flyS],
+      ['Round total', roundS],
+      ['Spikes/sec (peak)', peakSpikes],
+      ['Active neurons (peak)', peakActive + '/' + stats.neurons],
+      ['Pursuit lock', lockN ? Math.round(100 * lockHit / lockN) + '%' : '—']
+    ];
+    $('modalRows').innerHTML = rows.map(function (r) {
+      return '<div class="modal-row"><span class="label">' + r[0] +
+             '</span><span>' + r[1] + '</span></div>';
+    }).join('');
+    $('modal').classList.remove('hidden');
+    $('btnAgainModal').onclick = function () {
+      $('modal').classList.add('hidden');
+      reset();
+    };
   }
 
   function setMetricsDefault() {
@@ -358,8 +431,12 @@ window.Copycat = (function () {
     drawing = false;
     resultsShown = false;
     lastPen = null;
-    lockN = 0; lockHit = 0; flyStartT = 0; flyEndT = 0;
+    lockN = 0; lockHit = 0; flyStartT = 0; flyEndT = 0; roundStartT = 0;
+    $('roundTimer').textContent = '0.0s';
     lastOut = null; saidHello = false; saidLost = false; lastSayT = 0;
+    emaS = 0; emaR = 0; emaM = 0; gfCount = 0; gfWas = false; events = [];
+    peakSpikes = 0; peakActive = 0;
+    $('eventLog').innerHTML = ''; $('gGF').textContent = '0';
     drawHumanStroke();
     resetFly();
     drawFlyScene();

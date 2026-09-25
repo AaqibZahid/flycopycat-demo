@@ -10,9 +10,11 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<canvas id="grassBg" aria-hidden="true"></canvas>
 <header class="topbar">
   <h1 class="logo">Fly Copycat</h1>
   <p class="tagline">You draw. The fly's brain copies you.</p>
+  <div class="timer-pill" id="roundTimer" aria-label="Round time">0.0s</div>
 </header>
 
 <main class="stage">
@@ -40,11 +42,37 @@
   <div class="metric"><span class="label">Pursuit lock</span><span id="mLock">—</span></div>
 </section>
 
+<section class="panel brain" id="brainPanel" aria-label="Brain activity">
+  <h2>Brain <span id="gfBadge" class="mood">GF quiet</span></h2>
+  <div class="bars">
+    <div class="bar-row"><span class="bar-label">See (LC4/LPLC2)</span><div class="bar-bg"><div class="bar" id="barSensory"></div></div></div>
+    <div class="bar-row"><span class="bar-label">Think (relay)</span><div class="bar-bg"><div class="bar" id="barRelay"></div></div></div>
+    <div class="bar-row"><span class="bar-label">Move (descending)</span><div class="bar-bg"><div class="bar" id="barMotor"></div></div></div>
+  </div>
+  <div class="gauges">
+    <span>Loom <b id="gLoom">0%</b></span>
+    <span>Turn <b id="gBearing">–</b></span>
+    <span>GF fires <b id="gGF">0</b></span>
+  </div>
+  <ol class="eventlog" id="eventLog"></ol>
+</section>
+</section>
+
 <div class="actions">
   <button id="btnAgain" class="btn-picnic hidden">Do it again</button>
 </div>
 
+<div id="modal" class="modal hidden" role="dialog" aria-label="Round results">
+  <div class="modal-card">
+    <h2 id="modalTitle">Round over!</h2>
+    <div class="modal-fidelity"><span id="modalFidelity">—</span></div>
+    <div class="modal-rows" id="modalRows"></div>
+    <button id="btnAgainModal" class="btn-picnic">Do it again</button>
+  </div>
+</div>
+
 <script src="js/brain.js"></script>
+<script src="js/grass.js"></script>
 <script src="js/copycat.js"></script>
 </body>
 </html>

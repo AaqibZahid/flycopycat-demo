@@ -10,6 +10,15 @@
 
 * { box-sizing: border-box; }
 
+#grassBg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  image-rendering: pixelated;
+}
+
 body {
   margin: 0;
   font-family: 'Pixelify Sans', sans-serif;
@@ -29,6 +38,18 @@ body {
 }
 
 .tagline { margin: 4px 0 12px; font-weight: 700; }
+
+.timer-pill {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--sun);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 20px;
+  padding: 4px 22px;
+  margin-bottom: 10px;
+  min-width: 110px;
+}
 
 .stage {
   display: flex;
@@ -164,3 +185,89 @@ canvas.pixelated, img.pixel-art {
   0%, 100% { transform: scaleY(1); }
   50% { transform: scaleY(0.6); }
 }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 27, 8, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-card {
+  background: var(--cream);
+  border: 5px solid var(--ink);
+  border-radius: 32px;
+  box-shadow: 0 10px 0 var(--ink);
+  padding: 28px 36px;
+  text-align: center;
+  min-width: 340px;
+  max-width: 92vw;
+  animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-card h2 { margin: 0 0 4px; font-weight: 700; }
+
+.modal-fidelity {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 40px;
+  color: var(--ink);
+  margin: 8px 0 12px;
+}
+
+.modal-rows { margin-bottom: 18px; }
+
+.modal-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-weight: 700;
+  padding: 3px 0;
+}
+
+.modal-row .label { opacity: 0.7; font-weight: 500; }
+
+.panel.brain { max-width: 1024px; margin: 16px auto 0; }
+
+.bars { display: grid; gap: 6px; margin: 4px 0 8px; }
+
+.bar-row { display: flex; align-items: center; gap: 10px; }
+
+.bar-label { width: 170px; font-weight: 700; text-align: right; }
+
+.bar-bg {
+  flex: 1;
+  background: #eadfc8;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  height: 18px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  width: 0%;
+  background: var(--pink);
+  border-radius: 999px;
+  transition: width 0.2s;
+}
+
+#barMotor { background: #7bc96f; }
+#barRelay { background: var(--sun); }
+
+.gauges { display: flex; gap: 18px; font-weight: 500; margin-bottom: 6px; }
+
+.eventlog {
+  margin: 0;
+  padding: 6px 10px 6px 28px;
+  max-height: 110px;
+  overflow-y: auto;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.mood.gf-hot { color: #e63b3b; animation: wiggle 0.4s; }
