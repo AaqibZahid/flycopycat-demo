@@ -164,7 +164,7 @@ window.Copycat = (function () {
 
   function resetFly() {
     flyState = { x: W - 60, y: H - 60, heading: -Math.PI * 0.75, speed: 0,
-                 trail: [], wing: 0, idle: true };
+                 trail: [], wing: 0, idle: true, dwellN: 0 };
   }
 
   // ---- live chase loop ----
@@ -186,13 +186,19 @@ window.Copycat = (function () {
         if (Math.abs(rel) < 0.26) lockHit++; // within ~15 deg
         var loom = Math.min(1, (target.speed || 0) / 900);
         if (dist < 40) loom *= 0.3; // close up: gentle
+        // scent fades: frozen pen speed decays once the pen stops moving
+        var age = performance.now() - (target.t || 0);
+        if (age > 300) loom *= Math.exp(-(age - 300) / 500);
         var out = window.FlyBrain.step({ loom: loom, bearing: rel / Math.PI });
 
         // motor readout -> movement (geometric assist, documented in README)
-        flyState.heading += out.steer * 0.12;
-        var want = 2.0 + out.forward * 0.9;
+        // base speed scales with drive: no stimulus smell, no motion
+        var close = dist < 40;
+        flyState.heading += out.steer * (close ? 0.05 : 0.12); // gentle near target
+        var want = 0.6 + loom * 2.2 + out.forward * 0.9;
         if (out.escape > 0) want += 3.0; // Giant Fiber burst
         if (dist < 20) want *= 0.2;      // arrived: settle
+        if (dist < 30) flyState.dwellN++; else flyState.dwellN = 0;
         flyState.speed += (want - flyState.speed) * 0.35;
         flyState.x += Math.cos(flyState.heading) * flyState.speed;
         flyState.y += Math.sin(flyState.heading) * flyState.speed;
@@ -278,7 +284,7 @@ window.Copycat = (function () {
     if (!userDone) return;
     var t = lastPen;
     var d = t ? Math.hypot(t.x - flyState.x, t.y - flyState.y) : 999;
-    var settled = d < 20 && flyState.speed < 0.6;
+    var settled = (d < 20 && flyState.speed < 0.6) || flyState.dwellN > 45;
     var timedOut = now - drawEndT > 20000;
     if (settled || timedOut) {
       resultsShown = true;
