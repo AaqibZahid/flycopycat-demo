@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fly Copycat — draw it, the fly redraws it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1 class="logo">Fly Copycat</h1>
+  <p class="tagline">You draw. The fly's brain copies you.</p>
+</header>
+
+<main class="stage">
+  <section class="panel" id="humanPanel">
+    <h2>You</h2>
+    <canvas id="humanCanvas" width="480" height="480"></canvas>
+    <div class="toolbar" id="penToolbar" aria-label="Pen tools">
+      <!-- pen colors + eraser wired in copycat.js -->
+    </div>
+  </section>
+
+  <section class="panel" id="flyPanel">
+    <h2>Fly <span id="flyMood" class="mood">waiting…</span></h2>
+    <canvas id="flyCanvas" width="480" height="480"></canvas>
+    <div id="speech" class="bubble hidden" aria-live="polite"></div>
+  </section>
+</main>
+
+<section class="metrics" id="metrics" aria-label="Results">
+  <div class="metric"><span class="label">Fidelity</span><span id="mFidelity">—</span></div>
+  <div class="metric"><span class="label">Your time</span><span id="mHumanTime">—</span></div>
+  <div class="metric"><span class="label">Fly time</span><span id="mFlyTime">—</span></div>
+  <div class="metric"><span class="label">Spikes/sec</span><span id="mSpikes">—</span></div>
+  <div class="metric"><span class="label">Active neurons</span><span id="mActive">—</span></div>
+  <div class="metric"><span class="label">Pursuit lock</span><span id="mLock">—</span></div>
+</section>
+
+<div class="actions">
+  <button id="btnAgain" class="btn-picnic hidden">Do it again</button>
+</div>
+
+<script src="js/brain.js"></script>
+<script src="js/copycat.js"></script>
+</body>
+</html>

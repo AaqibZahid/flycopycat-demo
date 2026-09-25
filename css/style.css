@@ -1,0 +1,166 @@
+/* Fly Copycat — sunny picnic bubbly theme (placeholder art, sprites swap in later) */
+:root {
+  --sky: #bfe9ff;
+  --sun: #ffd93f;
+  --grass: #8ed081;
+  --ink: #5b3a1e;
+  --cream: #fff8e7;
+  --pink: #ffb3c7;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Pixelify Sans', sans-serif;
+  font-weight: 500;
+  color: var(--ink);
+  background: linear-gradient(var(--sky) 0%, var(--sky) 55%, var(--grass) 55%, var(--grass) 100%);
+  min-height: 100vh;
+}
+
+.topbar { text-align: center; padding: 12px 8px 0; }
+
+.logo {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 24px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.tagline { margin: 4px 0 12px; font-weight: 700; }
+
+.stage {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 12px;
+}
+
+.panel {
+  background: var(--cream);
+  border: 4px solid var(--ink);
+  border-radius: 24px;
+  padding: 12px;
+  box-shadow: 0 6px 0 var(--ink);
+}
+
+.panel h2 { margin: 0 0 8px; font-weight: 700; }
+
+canvas {
+  display: block;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+canvas.pixelated, img.pixel-art {
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.toolbar { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+.swatch {
+  width: 32px; height: 32px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toolbtn {
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-family: 'Pixelify Sans', sans-serif;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 4px 14px;
+  cursor: pointer;
+}
+
+.swatch.sel, .toolbtn.sel {
+  outline: 3px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.metrics {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 16px 12px 0;
+}
+
+.metric {
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 700;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+.metric .label { opacity: 0.7; margin-right: 8px; font-weight: 500; }
+
+.actions { text-align: center; margin: 16px 0 32px; }
+
+.btn-picnic {
+  background: var(--sun);
+  border: 4px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 6px 0 var(--ink);
+  font-family: 'Pixelify Sans', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink);
+  padding: 10px 28px;
+  cursor: pointer;
+  animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-picnic:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+
+.hidden { display: none !important; }
+
+.bubble {
+  position: relative;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 24px;
+  padding: 8px 14px;
+  margin-top: 10px;
+  font-weight: 700;
+  animation: pop 0.25s ease-out;
+  max-width: 440px;
+}
+
+.bubble::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 48px;
+  border: 12px solid transparent;
+  border-bottom-color: var(--ink);
+  border-top: 0;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes flutter {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.6); }
+}
